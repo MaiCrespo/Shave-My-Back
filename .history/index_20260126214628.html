@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Shave My Back Simulator</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #111;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: none;
+      }
+      #game-container {
+        width: 100vw;
+        height: 100vh;
+        background-image: url("assets/Skin.png");
+        background-size: cover;
+        background-position: center;
+        position: relative;
+      }
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+      }
+      #razor {
+        position: fixed;
+        pointer-events: none;
+        width: 120px;
+        z-index: 1000;
+        transform: translate(-30%, -30%);
+      }
+      .wound {
+        position: absolute;
+        pointer-events: none;
+        width: 100px;
+        z-index: 5;
+      }
+
+      .ui-container {
+        position: fixed;
+        bottom: 20px;
+        z-index: 2000;
+        display: flex;
+        gap: 15px;
+      }
+      #left-ctrl {
+        left: 20px;
+      }
+      #right-ctrl {
+        right: 20px;
+      }
+
+      .btn {
+        width: 70px;
+        height: auto;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+      .btn.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <img id="razor" src="assets/Razor.png" alt="razor" />
+
+    <div id="game-container">
+      <canvas id="layer1"></canvas>
+      <canvas id="layer2"></canvas>
+      <canvas id="layer3"></canvas>
+      <canvas id="layer4"></canvas>
+    </div>
+
+    <div class="ui-container" id="left-ctrl">
+      <img id="undoBtn" src="assets/Undo.png" class="btn" onclick="undo()" />
+      <img id="redoBtn" src="assets/Redo.png" class="btn" onclick="redo()" />
+    </div>
+
+    <div class="ui-container" id="right-ctrl">
+      <img
+        id="restartBtn"
+        src="assets/Restart.png"
+        class="btn"
+        onclick="location.reload()"
+      />
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

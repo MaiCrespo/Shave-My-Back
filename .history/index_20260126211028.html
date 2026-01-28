@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Shave My Back Simulator</title>
+    <style>
+      /* Remove all default spacing and scrollbars */
+      * {
+        box-sizing: border-box;
+      }
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        cursor: none;
+      }
+
+      #game-container {
+        width: 100vw;
+        height: 100vh;
+        /* Skin asset will now stretch to fill the entire screen */
+        background-image: url("assets/Skin.png");
+        background-size: cover;
+        background-position: center;
+        position: relative;
+      }
+
+      canvas {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 10;
+      }
+
+      #razor {
+        position: fixed;
+        pointer-events: none;
+        width: 120px;
+        z-index: 1000;
+        /* Adjust offset so the blade hits the cursor point */
+        transform: translate(-30%, -30%);
+      }
+
+      .wound {
+        position: absolute;
+        pointer-events: none;
+        width: 80px;
+        z-index: 5;
+      }
+    </style>
+  </head>
+  <body>
+    <img id="razor" src="assets/Razor.png" alt="razor" />
+
+    <div id="game-container">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shave My Back Simulator</title>
+    <style>
+      body {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #1a1a1a;
+        cursor: none; /* Hides the default mouse */
+        user-select: none;
+        overflow: hidden;
+      }
+      #game-container {
+        position: relative;
+        width: 800px;
+        height: 600px;
+        background-image: url("assets/Skin.png"); /* Skin is the bottom layer */
+        background-size: cover;
+        border: 5px solid #333;
+      }
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 5;
+      }
+      #razor {
+        position: fixed;
+        pointer-events: none;
+        width: 100px;
+        z-index: 1000;
+        transform: translate(-20%, -20%);
+      }
+      .wound {
+        position: absolute;
+        pointer-events: none;
+        width: 50px;
+        z-index: 2; /* Sits on skin, under the hair */
+      }
+    </style>
+  </head>
+  <body>
+    <img id="razor" src="assets/Razor.png" alt="razor" />
+
+    <div id="game-container">
+      <canvas id="hairCanvas"></canvas>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
