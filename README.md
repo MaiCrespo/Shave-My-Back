@@ -1,4 +1,3 @@
-Shave My Back
 Shave My Back is a satisfyingly visceral, web-based simulation game where players take on the role of a meticulous (or clumsy) groomer. The game features a unique multi-layer hair system that requires precision and patience to clear.
 
 Key Features
