@@ -37,40 +37,6 @@ const SKIN_IMGS = {
   AlienBG: { active: "assets/AlienActive.png", inactive: "assets/Alien.png" },
 };
 
-// UI elements that should NOT trigger shaving or history saves
-const UI_IDS = [
-  "undoBtn",
-  "redoBtn",
-  "restartBtn",
-  "ts-skin",
-  "ts-tattoo",
-  "ts-green",
-  "ts-alien",
-  "gs-skin",
-  "gs-tattoo",
-  "gs-green",
-  "gs-alien",
-  "start-btn",
-  "title-skin-selector",
-  "game-skin-selector",
-];
-
-function isUIClick(e) {
-  // Walk up the DOM — if we hit any UI element, it's not a shave action
-  var el = e.target;
-  while (el) {
-    if (el.id && UI_IDS.indexOf(el.id) !== -1) return true;
-    if (
-      el.classList &&
-      (el.classList.contains("btn") || el.classList.contains("skin-btn"))
-    )
-      return true;
-    if (el.id === "title-screen") return true;
-    el = el.parentElement;
-  }
-  return false;
-}
-
 function selectSkin(key) {
   currentSkin = key;
   const bgSrc = SKIN_MAP[key] || "assets/" + key + ".png";
@@ -127,9 +93,9 @@ function restartGame() {
 function init() {
   var loadedCount = 0;
   layers.forEach(function (layer, index) {
+    // Resizing clears canvas AND resets context state to defaults (source-over)
     layer.canvas.width = window.innerWidth;
     layer.canvas.height = window.innerHeight;
-    // canvas resize resets context state → composite is source-over
 
     var img = new Image();
     img.onload = function () {
@@ -144,7 +110,9 @@ function init() {
       layer.ctx.resetTransform();
       layer.ctx.globalCompositeOperation = "destination-out";
       loadedCount++;
+      console.log("Layer loaded:", index, "count:", loadedCount);
       if (loadedCount === layers.length) {
+        console.log("All layers loaded, saving initial history");
         saveToHistory();
       }
     };
@@ -157,6 +125,8 @@ function snapshotLayers() {
     l.ctx.globalCompositeOperation = "source-over";
     var url = l.canvas.toDataURL();
     l.ctx.globalCompositeOperation = "destination-out";
+    // Check the snapshot is non-empty
+    console.log("Snapshot length:", url.length);
     return url;
   });
 }
@@ -179,6 +149,12 @@ function saveToHistory() {
   } else {
     historyIndex++;
   }
+  console.log(
+    "saveToHistory: index=",
+    historyIndex,
+    "stack length=",
+    historyStack.length
+  );
   updateUI();
 }
 
@@ -196,32 +172,24 @@ function updateUI() {
 
 function attachEvents() {
   window.addEventListener("mousedown", function (e) {
-    if (isUIClick(e)) return;
     isDrawing = true;
     lastX = e.clientX;
     lastY = e.clientY;
   });
-
-  window.addEventListener("mouseup", function (e) {
-    // Only save history if we were actually shaving (not clicking UI)
-    if (isDrawing && !isUIClick(e)) {
+  window.addEventListener("mouseup", function () {
+    if (isDrawing) {
       isDrawing = false;
       saveToHistory();
-    } else {
-      isDrawing = false;
     }
   });
-
   window.addEventListener("mousemove", function (e) {
     razor.style.left = e.clientX + "px";
     razor.style.top = e.clientY + "px";
-    if (isDrawing && e.buttons === 1) smoothShave(e.clientX, e.clientY);
+    if (e.buttons === 1) smoothShave(e.clientX, e.clientY);
   });
-
   window.addEventListener(
     "touchstart",
     function (e) {
-      if (isUIClick(e)) return;
       e.preventDefault();
       isDrawing = true;
       lastX = e.touches[0].clientX;
@@ -229,14 +197,12 @@ function attachEvents() {
     },
     { passive: false }
   );
-
-  window.addEventListener("touchend", function (e) {
+  window.addEventListener("touchend", function () {
     if (isDrawing) {
       isDrawing = false;
       saveToHistory();
     }
   });
-
   window.addEventListener(
     "touchmove",
     function (e) {
@@ -291,6 +257,12 @@ function triggerOuch() {
 }
 
 function undo() {
+  console.log(
+    "undo called, historyIndex=",
+    historyIndex,
+    "stack=",
+    historyStack.length
+  );
   if (historyIndex > 0) {
     historyIndex--;
     applyState(historyStack[historyIndex]);
@@ -305,11 +277,13 @@ function redo() {
 }
 
 function applyState(state) {
+  console.log("applyState called, restoring index", historyIndex);
   isDrawing = false;
   var loadedCount = 0;
   state.layers.forEach(function (data, i) {
     var img = new Image();
     img.onload = function () {
+      console.log("applyState layer", i, "loaded, drawing...");
       layers[i].ctx.globalCompositeOperation = "source-over";
       layers[i].ctx.clearRect(
         0,
@@ -321,6 +295,7 @@ function applyState(state) {
       layers[i].ctx.globalCompositeOperation = "destination-out";
       loadedCount++;
       if (loadedCount === layers.length) {
+        console.log("applyState complete");
         shaveHistory = JSON.parse(state.shave);
         container.querySelectorAll(".wound").forEach(function (w) {
           w.remove();

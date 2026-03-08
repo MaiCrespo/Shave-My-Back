@@ -1,3 +1,4 @@
+// ── State ──────────────────────────────────────────────────────────────────
 const container = document.getElementById("game-container");
 const razor = document.getElementById("razor");
 const ouchOverlay = document.getElementById("ouch-overlay");
@@ -37,48 +38,17 @@ const SKIN_IMGS = {
   AlienBG: { active: "assets/AlienActive.png", inactive: "assets/Alien.png" },
 };
 
-// UI elements that should NOT trigger shaving or history saves
-const UI_IDS = [
-  "undoBtn",
-  "redoBtn",
-  "restartBtn",
-  "ts-skin",
-  "ts-tattoo",
-  "ts-green",
-  "ts-alien",
-  "gs-skin",
-  "gs-tattoo",
-  "gs-green",
-  "gs-alien",
-  "start-btn",
-  "title-skin-selector",
-  "game-skin-selector",
-];
-
-function isUIClick(e) {
-  // Walk up the DOM — if we hit any UI element, it's not a shave action
-  var el = e.target;
-  while (el) {
-    if (el.id && UI_IDS.indexOf(el.id) !== -1) return true;
-    if (
-      el.classList &&
-      (el.classList.contains("btn") || el.classList.contains("skin-btn"))
-    )
-      return true;
-    if (el.id === "title-screen") return true;
-    el = el.parentElement;
-  }
-  return false;
-}
-
+// ── Skin ────────────────────────────────────────────────────────────────────
 function selectSkin(key) {
   currentSkin = key;
   const bgSrc = SKIN_MAP[key] || "assets/" + key + ".png";
   container.style.backgroundImage = 'url("' + bgSrc + '")';
+
   const titleScreen = document.getElementById("title-screen");
   if (titleScreen && !titleScreen.classList.contains("hidden")) {
     titleScreen.style.backgroundImage = 'url("' + bgSrc + '")';
   }
+
   const idMap = {
     Skin: "skin",
     TattooBG: "tattoo",
@@ -101,6 +71,7 @@ function selectSkin(key) {
   });
 }
 
+// ── Title → Game ─────────────────────────────────────────────────────────────
 function startGame() {
   var titleScreen = document.getElementById("title-screen");
   titleScreen.classList.add("hidden");
@@ -124,16 +95,19 @@ function restartGame() {
   init();
 }
 
+// ── Init ──────────────────────────────────────────────────────────────────────
 function init() {
   var loadedCount = 0;
+
   layers.forEach(function (layer, index) {
+    // Resizing resets ALL canvas context state (composite op back to source-over)
     layer.canvas.width = window.innerWidth;
     layer.canvas.height = window.innerHeight;
-    // canvas resize resets context state → composite is source-over
 
     var img = new Image();
     img.onload = function () {
       var density = 60 + index * 35;
+      // composite is source-over after resize — draw hair normally
       for (var i = 0; i < density; i++) {
         var x = Math.random() * layer.canvas.width;
         var y = Math.random() * layer.canvas.height;
@@ -142,7 +116,9 @@ function init() {
         layer.ctx.drawImage(img, -70, -70, 140, 140);
       }
       layer.ctx.resetTransform();
+      // Switch to destination-out so shaving erases pixels
       layer.ctx.globalCompositeOperation = "destination-out";
+
       loadedCount++;
       if (loadedCount === layers.length) {
         saveToHistory();
@@ -152,8 +128,10 @@ function init() {
   });
 }
 
+// ── Snapshot ──────────────────────────────────────────────────────────────────
 function snapshotLayers() {
   return layers.map(function (l) {
+    // Temporarily switch to source-over so toDataURL captures real pixels
     l.ctx.globalCompositeOperation = "source-over";
     var url = l.canvas.toDataURL();
     l.ctx.globalCompositeOperation = "destination-out";
@@ -161,24 +139,29 @@ function snapshotLayers() {
   });
 }
 
+// ── History ───────────────────────────────────────────────────────────────────
 function saveToHistory() {
   if (historyIndex < historyStack.length - 1) {
     historyStack = historyStack.slice(0, historyIndex + 1);
   }
+
   var woundDivs = document.createElement("div");
   container.querySelectorAll(".wound").forEach(function (w) {
     woundDivs.appendChild(w.cloneNode(true));
   });
+
   historyStack.push({
     layers: snapshotLayers(),
     shave: JSON.stringify(shaveHistory),
     wounds: woundDivs.innerHTML,
   });
+
   if (historyStack.length > 20) {
     historyStack.shift();
   } else {
     historyIndex++;
   }
+
   updateUI();
 }
 
@@ -194,34 +177,27 @@ function updateUI() {
     .classList.toggle("visible", historyIndex > 0);
 }
 
+// ── Events ────────────────────────────────────────────────────────────────────
 function attachEvents() {
   window.addEventListener("mousedown", function (e) {
-    if (isUIClick(e)) return;
     isDrawing = true;
     lastX = e.clientX;
     lastY = e.clientY;
   });
-
-  window.addEventListener("mouseup", function (e) {
-    // Only save history if we were actually shaving (not clicking UI)
-    if (isDrawing && !isUIClick(e)) {
+  window.addEventListener("mouseup", function () {
+    if (isDrawing) {
       isDrawing = false;
       saveToHistory();
-    } else {
-      isDrawing = false;
     }
   });
-
   window.addEventListener("mousemove", function (e) {
     razor.style.left = e.clientX + "px";
     razor.style.top = e.clientY + "px";
-    if (isDrawing && e.buttons === 1) smoothShave(e.clientX, e.clientY);
+    if (e.buttons === 1) smoothShave(e.clientX, e.clientY);
   });
-
   window.addEventListener(
     "touchstart",
     function (e) {
-      if (isUIClick(e)) return;
       e.preventDefault();
       isDrawing = true;
       lastX = e.touches[0].clientX;
@@ -229,14 +205,12 @@ function attachEvents() {
     },
     { passive: false }
   );
-
-  window.addEventListener("touchend", function (e) {
+  window.addEventListener("touchend", function () {
     if (isDrawing) {
       isDrawing = false;
       saveToHistory();
     }
   });
-
   window.addEventListener(
     "touchmove",
     function (e) {
@@ -250,10 +224,12 @@ function attachEvents() {
   );
 }
 
+// ── Shaving ───────────────────────────────────────────────────────────────────
 function smoothShave(x, y) {
   var gridKey = Math.floor(x / 15) + "-" + Math.floor(y / 15);
   shaveHistory[gridKey] = (shaveHistory[gridKey] || 0) + 1;
   var depth = shaveHistory[gridKey];
+
   var activeCtx = null;
   if (depth <= 10) activeCtx = layers[3].ctx;
   else if (depth <= 20) activeCtx = layers[2].ctx;
@@ -263,6 +239,7 @@ function smoothShave(x, y) {
     spawnWound(x, y);
     triggerOuch();
   }
+
   if (activeCtx) {
     activeCtx.lineWidth = 65;
     activeCtx.lineCap = "round";
@@ -290,6 +267,7 @@ function triggerOuch() {
   ouchOverlay.classList.add("flash");
 }
 
+// ── Undo / Redo ───────────────────────────────────────────────────────────────
 function undo() {
   if (historyIndex > 0) {
     historyIndex--;
@@ -307,6 +285,7 @@ function redo() {
 function applyState(state) {
   isDrawing = false;
   var loadedCount = 0;
+
   state.layers.forEach(function (data, i) {
     var img = new Image();
     img.onload = function () {
@@ -319,6 +298,7 @@ function applyState(state) {
       );
       layers[i].ctx.drawImage(img, 0, 0);
       layers[i].ctx.globalCompositeOperation = "destination-out";
+
       loadedCount++;
       if (loadedCount === layers.length) {
         shaveHistory = JSON.parse(state.shave);
@@ -337,6 +317,7 @@ function applyState(state) {
   });
 }
 
+// ── Razor on title screen ─────────────────────────────────────────────────────
 window.addEventListener("mousemove", function (e) {
   razor.style.left = e.clientX + "px";
   razor.style.top = e.clientY + "px";
