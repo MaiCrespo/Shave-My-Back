@@ -27,7 +27,7 @@ const SKIN_MAP = {
   Skin: "assets/Skin.png",
   TattooBG: "assets/TattooBG.png",
   GreenBG: "assets/GreenBG.png",
-  AlienBG: "assets/AlienBGpng.png",
+  AlienBG: "assets/AlienBG.png",
 };
 
 // Active/inactive image for each selector button pair
