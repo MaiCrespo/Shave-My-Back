@@ -43,7 +43,7 @@ window.addEventListener("mousemove", function (e) {
 });
 
 // ── UI click detection — prevents shaving/history on button clicks ────────────
-function isUIClick(e) {
+function isClickable(e) {
   var el = e.target;
   while (el) {
     if (
@@ -88,7 +88,7 @@ function selectSkin(key) {
   });
 }
 
-// ── Title → Game ─────────────────────────────────────────────────
+// ── Title → Game ──────────────────────────────────────────────────────────────
 function startGame() {
   var titleScreen = document.getElementById("title-screen");
   titleScreen.classList.add("hidden");
@@ -142,7 +142,7 @@ function init() {
 }
 
 // ── Snapshot ──────────────────────────────────────────────────────────────────
-// Instead of drawing black lines, your marker erases whatever it touches.
+// Temporarily switch to source-over before toDataURL so the snapshot
 // captures real pixels (destination-out would produce a blank image)
 function snapshotLayers() {
   return layers.map(function (l) {
@@ -195,14 +195,14 @@ function updateUI() {
 // ── Events ────────────────────────────────────────────────────────────────────
 function attachEvents() {
   window.addEventListener("mousedown", function (e) {
-    if (isUIClick(e)) return;
+    if (isClickable(e)) return;
     isDrawing = true;
     lastX = e.clientX;
     lastY = e.clientY;
   });
 
   window.addEventListener("mouseup", function (e) {
-    if (isDrawing && !isUIClick(e)) {
+    if (isDrawing && !isClickable(e)) {
       isDrawing = false;
       saveToHistory();
     } else {
@@ -217,7 +217,7 @@ function attachEvents() {
   window.addEventListener(
     "touchstart",
     function (e) {
-      if (isUIClick(e)) return;
+      if (isClickable(e)) return;
       e.preventDefault();
       isDrawing = true;
       lastX = e.touches[0].clientX;
@@ -337,4 +337,5 @@ function applyState(state) {
   });
 }
 
-// ── Init with default skin/ runs the game's initial setup  ────────────────────────────
+// ── Init with default skin ────────────────────────────────────────────────────
+selectSkin("Skin");
