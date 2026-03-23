@@ -337,4 +337,5 @@ function applyState(state) {
   });
 }
 
-// ── Init with default skin/ runs the game's initial setup  ────────────────────────────
+// ── Init with default skin/ runs the game's initial setup  ────────────────────────────────────────────────────
+selectSkin("Skin");
