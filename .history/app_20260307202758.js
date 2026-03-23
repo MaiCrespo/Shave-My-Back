@@ -56,7 +56,7 @@ const UI_IDS = [
 ];
 
 function isUIClick(e) {
-  // Walk up the DOM — if I hit any UI element, it's not a shave action
+  // Walk up the DOM — if we hit any UI element, it's not a shave action
   var el = e.target;
   while (el) {
     if (el.id && UI_IDS.indexOf(el.id) !== -1) return true;
